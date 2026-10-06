@@ -22,6 +22,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
         <LeafBackdrop />
         <div className="relative z-10 flex w-full flex-col items-center">{children}</div>
       </main>
+      <footer className="border-t border-border bg-surface px-6 py-4 text-center text-sm text-muted">
+        <Link href="/privacy" className="hover:underline">
+          Privacy Policy
+        </Link>
+      </footer>
     </div>
   );
 }
