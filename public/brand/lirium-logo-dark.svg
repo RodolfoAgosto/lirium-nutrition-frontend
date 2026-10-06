@@ -1,0 +1,12 @@
+<svg width="320" height="80" viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="80" fill="#1B2F21"/>
+  <!-- icon 48px, centrado verticalmente -->
+  <g transform="translate(16,16) scale(1.2)">
+    <path d="M9 35 L9 5 Q9 2 12 2 Q24 2 31 14 Q36 22 28 30 Q22 36 9 35 Z" fill="#2E7D32"/>
+    <path d="M9 34 Q16 22 21 4" stroke="white" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.25"/>
+  </g>
+  <!-- wordmark -->
+  <text x="78" y="44" font-family="Inter,Helvetica Neue,Arial,sans-serif" font-size="24" font-weight="700" letter-spacing="-0.6" fill="#FFFFFF">Lirium</text>
+  <text x="150" y="44" font-family="Inter,Helvetica Neue,Arial,sans-serif" font-size="24" font-weight="700" letter-spacing="-0.6" fill="#2E7D32"> Nutrition</text>
+  <text x="78" y="58" font-family="Inter,Helvetica Neue,Arial,sans-serif" font-size="8" font-weight="500" letter-spacing="2.5" fill="rgba(255,255,255,0.50)">PRECISION · HEALTH · TECH</text>
+</svg>
