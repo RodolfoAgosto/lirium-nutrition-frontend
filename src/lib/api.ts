@@ -90,6 +90,7 @@ export type PlanSummary = {
 };
 
 export type PlanPortion = {
+  id: number;
   foodName: string;
   quantity: number;
   unit: string;
@@ -109,7 +110,12 @@ export type PlanDetail = {
   proteinGrams: number;
   carbGrams: number;
   fatGrams: number;
-  week: { dayOfWeek: string; meals: { type: string; portions: PlanPortion[] }[] }[];
+  week: {
+    id: number;
+    dayOfWeek: string;
+    totals: { calories: number; protein: number; carbs: number; fat: number };
+    meals: { id: number; type: string; portions: PlanPortion[] }[];
+  }[];
 };
 
 export const api = {

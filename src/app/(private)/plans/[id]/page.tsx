@@ -119,18 +119,26 @@ export default function PlanPage() {
             })}
           </div>
 
+          {current && (
+            <p className="text-sm text-muted">
+              Day total: <span className="font-semibold text-foreground">{current.totals.calories} kcal</span> of{" "}
+              {plan.dailyCalories} target · P {current.totals.protein}/{plan.proteinGrams} g · C {current.totals.carbs}/{plan.carbGrams} g · F{" "}
+              {current.totals.fat}/{plan.fatGrams} g
+            </p>
+          )}
+
           <div className="flex flex-col gap-4">
             {meals.map((m) => {
               const kcal = m.portions.reduce((sum, p) => sum + p.calories, 0);
               return (
-                <Card key={m.type} className="flex flex-col gap-3 p-5 sm:p-5">
+                <Card key={m.id} className="flex flex-col gap-3 p-5 sm:p-5">
                   <div className="flex items-center justify-between">
                     <h3 className="text-base font-semibold">{humanize(m.type)}</h3>
                     <span className="text-sm text-muted">{kcal} kcal</span>
                   </div>
                   <ul className="divide-y divide-border">
-                    {m.portions.map((p, i) => (
-                      <li key={i} className="flex items-center justify-between gap-3 py-2 text-[15px]">
+                    {m.portions.map((p) => (
+                      <li key={p.id} className="flex items-center justify-between gap-3 py-2 text-[15px]">
                         <span>{p.foodName}</span>
                         <span className="shrink-0 text-muted">
                           {Math.round(p.quantity)} {UNIT[p.unit] ?? p.unit} · {p.calories} kcal
