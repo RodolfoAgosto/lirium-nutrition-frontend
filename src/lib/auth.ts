@@ -6,6 +6,11 @@ const REFRESH_KEY = "lirium.refreshToken";
 
 export type Session = { email: string; roles: string[] };
 
+// Authorities may come as "ROLE_NUTRITIONIST" or "NUTRITIONIST".
+export function isStaff(session: Session | null): boolean {
+  return !!session?.roles.some((r) => /^(ROLE_)?(NUTRITIONIST|ADMIN)$/.test(r));
+}
+
 const isBrowser = () => typeof window !== "undefined";
 
 export const auth = {

@@ -6,22 +6,30 @@ import { useEffect, useState } from "react";
 import { Logo } from "./logo";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { auth, type Session } from "@/lib/auth";
+import { auth, isStaff, type Session } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
-// The menu is defined once here. Future screens only need a new entry.
-const NAV = [
+// Menus are defined once here, one per kind of user. Future screens only need a new entry.
+type NavItem = { label: string; href: string; icon: string; enabled: boolean };
+
+const PATIENT_NAV: NavItem[] = [
   { label: "Home", href: "/home", icon: "home", enabled: true },
   { label: "My plan", href: "/plan", icon: "plan", enabled: false },
   { label: "Daily log", href: "/log", icon: "log", enabled: false },
   { label: "Reports", href: "/reports", icon: "reports", enabled: false },
-] as const;
+];
+
+const STAFF_NAV: NavItem[] = [
+  { label: "Home", href: "/home", icon: "home", enabled: true },
+  { label: "Patients", href: "/patients", icon: "patients", enabled: true },
+];
 
 const ICONS: Record<string, React.ReactNode> = {
   home: (<><path d="M3 11l9-8 9 8" /><path d="M5 10v10h14V10" /></>),
   plan: (<><rect x="6" y="4" width="12" height="17" rx="2" /><path d="M9 4h6v3H9z" /></>),
   log: (<><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>),
   reports: <path d="M5 20V10M12 20V4M19 20v-7" />,
+  patients: (<><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.5c1.8.8 3 2.7 3 5.5" /></>),
 };
 
 function NavIcon({ name }: { name: string }) {
@@ -61,6 +69,8 @@ export function PrivateLayout({ children }: { children: React.ReactNode }) {
 
   if (!session) return null;
 
+  const nav = isStaff(session) ? STAFF_NAV : PATIENT_NAV;
+
   return (
     <div className="flex min-h-screen flex-col bg-background md:flex-row">
       <aside className="flex flex-col gap-4 border-b border-border bg-surface p-4 md:w-60 md:shrink-0 md:gap-6 md:border-b-0 md:border-r md:px-4 md:py-6">
@@ -72,8 +82,8 @@ export function PrivateLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex gap-1 overflow-x-auto md:flex-1 md:flex-col" aria-label="Main">
-          {NAV.map((item) => {
-            const active = pathname === item.href;
+          {nav.map((item) => {
+            const active = pathname === item.href || (item.href !== "/home" && pathname.startsWith(item.href + "/"));
             const classes = cn(
               "flex min-h-11 shrink-0 items-center gap-3 rounded-md px-3 text-[15px]",
               active ? "bg-primary/10 font-semibold text-primary" : "text-muted",

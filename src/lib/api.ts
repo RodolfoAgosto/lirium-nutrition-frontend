@@ -64,6 +64,54 @@ export type RegisterInput = {
   lastName: string;
 };
 
+export type PatientSummary = { patientId: number; firstName: string; lastName: string; email: string; dni: string | null };
+
+export type PatientDetail = PatientSummary & {
+  sex: string | null;
+  birthDate: string | null;
+  // Value objects: the API may send a number or an object depending on serialization.
+  height: number | { cm: number } | null;
+  weight: number | { grams: number } | null;
+  activityLevel: string | null;
+  goal: string | null;
+  medicalNotes: string | null;
+  restrictions: { id: number; code: string; name: string; category: string }[];
+  physiologicalConditions: string[];
+};
+
+export type PlanSummary = {
+  id: number;
+  name: string;
+  status: "DRAFT" | "ACTIVE" | "INACTIVE";
+  targetGoal: string | null;
+  dailyCalories: number;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+export type PlanPortion = {
+  foodName: string;
+  quantity: number;
+  unit: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+export type PlanDetail = {
+  id: number;
+  name: string;
+  description: string | null;
+  status: PlanSummary["status"];
+  targetGoal: string | null;
+  dailyCalories: number;
+  proteinGrams: number;
+  carbGrams: number;
+  fatGrams: number;
+  week: { dayOfWeek: string; meals: { type: string; portions: PlanPortion[] }[] }[];
+};
+
 export const api = {
   login: (email: string, password: string) =>
     request<AuthTokens>("/api/auth/login", {
@@ -83,4 +131,19 @@ export const api = {
   logout: () => request<void>("/api/auth/logout", { method: "POST", authenticated: true }),
 
   googleLoginUrl: `${API_URL}/oauth2/authorization/google`,
+
+  searchPatients: () => request<PatientSummary[]>("/api/patients/search", { authenticated: true }),
+
+  getPatient: (id: number) => request<PatientDetail>(`/api/patients/${id}`, { authenticated: true }),
+
+  getPatientPlans: (patientId: number) =>
+    request<PlanSummary[]>(`/api/patients/${patientId}/nutrition-plans`, { authenticated: true }),
+
+  getPlan: (id: number) => request<PlanDetail>(`/api/nutrition-plans/${id}`, { authenticated: true }),
+
+  generatePlan: (patientId: number) =>
+    request<PlanDetail>(`/api/nutrition-plans/generate/${patientId}`, { method: "POST", authenticated: true }),
+
+  activatePlan: (id: number) =>
+    request<void>(`/api/nutrition-plans/${id}/activate`, { method: "PATCH", authenticated: true }),
 };
