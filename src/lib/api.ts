@@ -262,6 +262,10 @@ export const api = {
     return { record: body, created: status === 201 };
   },
 
+  // Every record the patient has, with its meals. Reading does not create anything.
+  getDailyRecords: (patientId: number) =>
+    request<DailyRecord[]>(`/api/patients/${patientId}/daily-records`, { authenticated: true }),
+
   getFoods: () => request<FoodSummary[]>("/api/foods", { authenticated: true }),
 
   addPortion: (mealRecordId: number, input: { foodId: number; quantity: number; unit: MeasureUnit }) =>

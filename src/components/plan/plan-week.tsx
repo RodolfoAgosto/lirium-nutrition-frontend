@@ -7,7 +7,7 @@ import { cn, humanize } from "@/lib/utils";
 
 const DAY_ORDER = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
 const JS_DAYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-const MEAL_ORDER = ["BREAKFAST", "MID_MORNING", "LUNCH", "SNACK", "DINNER"];
+export const MEAL_ORDER = ["BREAKFAST", "MID_MORNING", "LUNCH", "SNACK", "DINNER"];
 const UNIT: Record<string, string> = { GRAM: "g", MILLILITER: "ml", UNIT: "u" };
 
 export function todayDayOfWeek(): string {

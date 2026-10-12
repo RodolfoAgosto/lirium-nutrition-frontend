@@ -16,7 +16,7 @@ type NavItem = { label: string; href: string; icon: string; enabled: boolean };
 const PATIENT_NAV: NavItem[] = [
   { label: "Home", href: "/home", icon: "home", enabled: true },
   { label: "My plan", href: "/plan", icon: "plan", enabled: true },
-  { label: "Daily log", href: "/log", icon: "log", enabled: false },
+  { label: "Daily log", href: "/log", icon: "log", enabled: true },
   { label: "Reports", href: "/reports", icon: "reports", enabled: false },
 ];
 
