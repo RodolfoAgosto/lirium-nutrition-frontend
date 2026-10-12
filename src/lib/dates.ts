@@ -27,3 +27,13 @@ export function shiftDay(iso: string, days: number): string {
 export function formatDay(iso: string): string {
   return parse(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
+
+// "Oct 3"
+export function formatShort(iso: string): string {
+  return parse(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// "Sat, Oct 3"
+export function formatWithWeekday(iso: string): string {
+  return parse(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
