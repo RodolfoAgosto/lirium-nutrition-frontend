@@ -7,6 +7,7 @@ import { Logo } from "./logo";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { auth, isStaff, type Session } from "@/lib/auth";
+import { clearMyProfile } from "@/hooks/use-my-profile";
 import { cn } from "@/lib/utils";
 
 // Menus are defined once here, one per kind of user. Future screens only need a new entry.
@@ -14,7 +15,7 @@ type NavItem = { label: string; href: string; icon: string; enabled: boolean };
 
 const PATIENT_NAV: NavItem[] = [
   { label: "Home", href: "/home", icon: "home", enabled: true },
-  { label: "My plan", href: "/plan", icon: "plan", enabled: false },
+  { label: "My plan", href: "/plan", icon: "plan", enabled: true },
   { label: "Daily log", href: "/log", icon: "log", enabled: false },
   { label: "Reports", href: "/reports", icon: "reports", enabled: false },
 ];
@@ -64,6 +65,7 @@ export function PrivateLayout({ children }: { children: React.ReactNode }) {
       /* even if the call fails, drop the local session */
     }
     auth.clear();
+    clearMyProfile();
     router.replace("/login");
   }
 

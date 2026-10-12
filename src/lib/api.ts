@@ -22,7 +22,10 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit & { authenticated?: boolean } = {}): Promise<T> {
+async function requestWithStatus<T>(
+  path: string,
+  init: RequestInit & { authenticated?: boolean } = {},
+): Promise<{ body: T; status: number }> {
   const { authenticated, headers, ...rest } = init;
   const finalHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -51,8 +54,21 @@ async function request<T>(path: string, init: RequestInit & { authenticated?: bo
     throw new ApiError(res.status, message);
   }
 
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  if (res.status === 204) return { body: undefined as T, status: res.status };
+  return { body: (await res.json()) as T, status: res.status };
+}
+
+async function request<T>(path: string, init: RequestInit & { authenticated?: boolean } = {}): Promise<T> {
+  return (await requestWithStatus<T>(path, init)).body;
+}
+
+// "?from=2026-09-01&to=2026-09-30"; both bounds are optional (the API defaults to the last 30 days).
+function rangeQuery(range?: { from?: string; to?: string }): string {
+  const params = new URLSearchParams();
+  if (range?.from) params.set("from", range.from);
+  if (range?.to) params.set("to", range.to);
+  const q = params.toString();
+  return q ? `?${q}` : "";
 }
 
 export type AuthTokens = { token: string; refreshToken: string };
@@ -118,6 +134,82 @@ export type PlanDetail = {
   }[];
 };
 
+export type MeasureUnit = "GRAM" | "MILLILITER" | "UNIT";
+
+// Catalog entry. defaultUnit is the unit the food is normally measured in; the API
+// rejects a portion whose unit the food cannot convert to grams.
+export type FoodSummary = { id: number; name: string; defaultUnit: MeasureUnit | null };
+
+// What the patient actually ate, as the API reports it (see DailyRecordResponseDTO).
+export type RecordPortion = {
+  id: number;
+  foodName: string;
+  quantity: number;
+  unit: MeasureUnit;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+export type RecordMeal = {
+  id: number;
+  type: string;
+  // True once the patient changed the meal (added food or wrote a note).
+  overridden: boolean;
+  notes: string | null;
+  eatenAt: string | null;
+  portions: RecordPortion[];
+};
+
+export type DailyRecord = { id: number; date: string; meals: RecordMeal[] };
+
+export type Nutrients = { calories: number; protein: number; carbs: number; fat: number };
+
+export type NutritionScore = Nutrients & { overall: number };
+
+export type AdherenceReport = {
+  from: string;
+  to: string;
+  summary: {
+    totalDays: number;
+    recordedDays: number;
+    expectedMeals: number;
+    followedMeals: number;
+    adherence: number;
+    adherenceOnRecordedDays: number | null;
+  };
+  days: {
+    date: string;
+    hasRecord: boolean;
+    expectedMeals: number;
+    followedMeals: number | null;
+    modifiedMeals: number | null;
+  }[];
+};
+
+export type NutritionComparisonReport = {
+  from: string;
+  to: string;
+  targets: Nutrients;
+  summary: {
+    totalDays: number;
+    recordedDays: number;
+    averageScore: NutritionScore | null;
+    averageConsumed: Nutrients | null;
+  };
+  days: {
+    date: string;
+    hasRecord: boolean;
+    planned: Nutrients;
+    consumed: Nutrients | null;
+    score: NutritionScore | null;
+  }[];
+};
+
+// ensureDailyRecord answers 200 when the day already existed and 201 when it was just created.
+export type EnsuredRecord = { record: DailyRecord; created: boolean };
+
 export const api = {
   login: (email: string, password: string) =>
     request<AuthTokens>("/api/auth/login", {
@@ -152,4 +244,54 @@ export const api = {
 
   activatePlan: (id: number) =>
     request<void>(`/api/nutrition-plans/${id}/activate`, { method: "PATCH", authenticated: true }),
+
+  // ---- Patient side ----------------------------------------------------------
+  // The JWT carries no user id, so a patient asks the API who they are.
+  getMyProfile: () => request<PatientDetail>("/api/patients/me", { authenticated: true }),
+
+  getActivePlan: (patientId: number) =>
+    request<PlanDetail>(`/api/patients/${patientId}/nutrition-plans/active`, { authenticated: true }),
+
+  // Get-or-create: opens the day (today when no date is given) from the active plan.
+  ensureDailyRecord: async (patientId: number, date?: string): Promise<EnsuredRecord> => {
+    const query = date ? `?date=${encodeURIComponent(date)}` : "";
+    const { body, status } = await requestWithStatus<DailyRecord>(
+      `/api/patients/${patientId}/daily-records/ensure${query}`,
+      { method: "POST", authenticated: true },
+    );
+    return { record: body, created: status === 201 };
+  },
+
+  getFoods: () => request<FoodSummary[]>("/api/foods", { authenticated: true }),
+
+  addPortion: (mealRecordId: number, input: { foodId: number; quantity: number; unit: MeasureUnit }) =>
+    request<RecordMeal>(`/api/daily-records/meals/${mealRecordId}/portions`, {
+      method: "POST",
+      body: JSON.stringify(input),
+      authenticated: true,
+    }),
+
+  removePortion: (dailyRecordId: number, mealRecordId: number, portionId: number) =>
+    request<void>(`/api/daily-records/${dailyRecordId}/meals/${mealRecordId}/portions/${portionId}`, {
+      method: "DELETE",
+      authenticated: true,
+    }),
+
+  updateMealNotes: (mealRecordId: number, notes: string) =>
+    request<RecordMeal>(`/api/daily-records/meals/${mealRecordId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ notes }),
+      authenticated: true,
+    }),
+
+  getAdherence: (patientId: number, range?: { from?: string; to?: string }) =>
+    request<AdherenceReport>(`/api/patients/${patientId}/daily-records/meal-adherence${rangeQuery(range)}`, {
+      authenticated: true,
+    }),
+
+  getNutritionComparison: (patientId: number, range?: { from?: string; to?: string }) =>
+    request<NutritionComparisonReport>(
+      `/api/patients/${patientId}/daily-records/nutrition-comparison${rangeQuery(range)}`,
+      { authenticated: true },
+    ),
 };
